@@ -1,0 +1,46 @@
+services:
+  aie:
+    build:
+      context: .
+    # Linuxで .env の所有者に合わせる場合は LOCAL_UID / LOCAL_GID を指定する。
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    init: true
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,mode=1777
+    volumes:
+      - type: bind
+        source: ./app
+        target: /workspace/app
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./data
+        target: /workspace/data
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./scripts
+        target: /workspace/scripts
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./tests
+        target: /workspace/tests
+        read_only: true
+        bind:
+          create_host_path: false
+      # キーをイメージやコンテナの環境変数に含めず、ファイルとして渡す。
+      - type: bind
+        source: ./.env
+        target: /workspace/.env
+        read_only: true
+        bind:
+          create_host_path: false

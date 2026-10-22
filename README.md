@@ -3,6 +3,8 @@
 AIエンジニアリング実践講座（AIE2026）の演習と宿題で使うリポジトリです。
 講座を通して、**AIエンジニアリングの学習を支援するエージェント**を少しずつ育てていきます。
 
+ローカルのDockerで実行する場合は、末尾の「ローカルのVS CodeでDockerを使う」を参照してください。
+
 ## 想定する環境
 
 演習は **ブラウザだけで** 進められるように作っています。自分の PC への導入は不要です。
@@ -88,3 +90,20 @@ AIE_MODEL=gemini-3.5-flash uv run python -m app.ask "LoRAとは何ですか？"
 ```
 
 無料枠には1分あたり・1日あたりのリクエスト上限があります。上限は [Gemini API のレート制限のページ](https://ai.google.dev/gemini-api/docs/rate-limits) で確認してください。
+
+## ローカルのVS CodeでDockerを使う
+
+PythonとuvをPCにインストールせずに実行できます。DockerとDocker Composeを用意し、WSLの場合はDocker DesktopのWSL Integrationを有効にしてください。
+
+プロジェクト直下に`.env`を作成し、`GEMINI_API_KEY=`の右側に取得済みのキーをエディターで入力してください。`.env`は既存の`.gitignore`でGitの対象外です。平文ファイルなので共有せず、Linux・WSLでは`chmod 600 .env`でアクセスを制限してください。
+
+```bash
+docker compose build
+docker compose run --rm aie python -m app.ask "LoRAとは何ですか？"
+docker compose run --rm aie python -m app.ask --chat
+docker compose run --rm aie python -m pytest -q -p no:cacheprovider
+```
+
+`--chat`では会話履歴を引き継ぎ、各回答の入力・出力トークン数を表示します。`/exit`で終了し、履歴は保存しません。モデルは`.env`の`AIE_MODEL`で変更できます。環境変数が設定されていれば、`.env`より優先します。
+
+`.env`はイメージに含めず、実行時に読み取り専用で渡します。ソースの編集は次の実行に反映されます。依存関係を変更した場合は再ビルドしてください。Linuxで権限エラーが出る場合は、`.env`に`LOCAL_UID`と`LOCAL_GID`を`id -u`と`id -g`の値で指定してください（既定は1000）。
