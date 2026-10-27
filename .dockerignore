@@ -1,0 +1,21 @@
+# ビルドに必要なファイルだけを許可する。
+**
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!app/
+!app/**
+!data/
+!data/**
+!scripts/
+!scripts/**
+!tests/
+!tests/**
+
+# 許可したディレクトリ内にも秘密情報や生成物を含めない。
+**/.env
+**/.env.*
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.venv/

@@ -1,14 +1,28 @@
 """講座全体で共通の設定。
 
-APIキーやモデル名はコードに書かず、環境変数から読み込む。
+APIキーやモデル名は、環境変数またはプロジェクト直下の .env から読み込む。
 """
 
 import os
+from pathlib import Path
+
+from dotenv import dotenv_values
+
+ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+
+
+def _get_setting(name: str, default: str | None = None) -> str | None:
+    # 親ディレクトリや作業ディレクトリの .env は探索しない。
+    # os.environ に追加せず、MCP などの子プロセスへキーを自動で渡さない。
+    if name in os.environ:
+        return os.environ[name]
+    return dotenv_values(ENV_FILE, encoding="utf-8", interpolate=False).get(name, default)
+
 
 # 既定モデル。環境変数 AIE_MODEL を設定すると切り替えられる。
 #   例: export AIE_MODEL=gemini-3.5-flash
 DEFAULT_MODEL = "gemini-3.5-flash-lite"
-MODEL = os.getenv("AIE_MODEL", DEFAULT_MODEL)
+MODEL = _get_setting("AIE_MODEL", DEFAULT_MODEL) or DEFAULT_MODEL
 
 
 def api_error_message(status: int, detail: str = "") -> str:
@@ -23,14 +37,15 @@ def api_error_message(status: int, detail: str = "") -> str:
 
 
 def get_api_key() -> str:
-    """環境変数 GEMINI_API_KEY を返す。未設定なら手順を表示して終了する。"""
-    key = os.getenv("GEMINI_API_KEY")
+    """環境変数を優先してAPIキーを読み、未設定なら値を表示せずに終了する。"""
+    key = (_get_setting("GEMINI_API_KEY") or "").strip()
     if not key:
         raise SystemExit(
-            "環境変数 GEMINI_API_KEY が見つかりません。\n"
-            "1. GitHub の Settings → Codespaces → Secrets に GEMINI_API_KEY を登録し、\n"
-            "   使う repository に自分の fork を選んでください。\n"
-            "2. Codespaces を起動したあとに登録した場合は、Codespaces を再起動してください。\n"
-            "   （左下の「Codespaces」→「Stop Current Codespace」→ 再度開く）"
+            "GEMINI_API_KEY が未設定または空です。\n"
+            "ローカルの VS Code: プロジェクト直下に .env を作成し、\n"
+            "GEMINI_API_KEY に取得済みのキーを設定してください。\n"
+            "環境変数が設定済みの場合は、.env より優先されます。\n"
+            "Codespaces: secret に GEMINI_API_KEY を登録し、再起動してください。\n"
+            "キーをコード・コミット・チャットに貼らないでください。"
         )
     return key
