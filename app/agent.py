@@ -14,6 +14,7 @@
 import argparse
 import inspect
 import json
+import sys
 from pathlib import Path
 
 from pydantic_ai import Agent
@@ -42,7 +43,7 @@ agent = Agent(instructions=INSTRUCTIONS)
 agent.tool_plain(tools.search_glossary)
 agent.tool_plain(tools.get_lecture_summary)
 
-# TODO(第3回 演習): tools.py に make_quiz を作り、ここで登録しよう
+agent.tool_plain(tools.make_quiz)
 
 # 第5回: 使う MCP サーバーの設定ファイル。Claude Desktop や Cursor と同じ "mcpServers" 形式
 MCP_CONFIG = Path(__file__).resolve().parent / "mcp_servers.json"
@@ -66,7 +67,10 @@ def load_mcp_servers(config_path: Path = MCP_CONFIG) -> list[MCPToolset]:
         if "url" in spec:
             transport = spec["url"]
         else:
-            transport = StdioTransport(spec["command"], spec.get("args", []), env=spec.get("env"))
+            # Pythonサーバーは親と同じ仮想環境で起動する。子プロセスのPATHに
+            # 仮想環境が含まれない場合も、Dockerの読み取り専用領域に環境を作らない。
+            command = sys.executable if spec["command"] == "python" else spec["command"]
+            transport = StdioTransport(command, spec.get("args", []), env=spec.get("env"))
         toolsets.append(MCPToolset(Client(transport, mode="legacy")).prefixed(name))
     return toolsets
 

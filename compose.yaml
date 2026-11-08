@@ -26,6 +26,12 @@ services:
         bind:
           create_host_path: false
       - type: bind
+        source: ./lectures
+        target: /workspace/lectures
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
         source: ./scripts
         target: /workspace/scripts
         read_only: true
