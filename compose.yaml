@@ -2,6 +2,7 @@ services:
   aie:
     build:
       context: .
+      target: base
     # Linuxで .env の所有者に合わせる場合は LOCAL_UID / LOCAL_GID を指定する。
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     init: true
@@ -48,5 +49,31 @@ services:
         source: ./.env
         target: /workspace/.env
         read_only: true
+        bind:
+          create_host_path: false
+
+  annotate:
+    extends:
+      service: aie
+    build:
+      target: annotate
+    command: ["streamlit", "run", "tools/annotate.py", "--server.address=0.0.0.0"]
+    ports:
+      - "127.0.0.1:8501:8501"
+    volumes:
+      - type: bind
+        source: ./tools
+        target: /workspace/tools
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./data/eval
+        target: /workspace/data/eval
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./lectures/04
+        target: /workspace/lectures/04
         bind:
           create_host_path: false

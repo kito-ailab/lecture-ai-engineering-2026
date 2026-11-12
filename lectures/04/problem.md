@@ -71,6 +71,8 @@ uv run --with streamlit==1.66.1 streamlit run tools/annotate.py
 
 `uv run --with` は、講座の環境に Streamlit を一時的に足して実行する方法です（第3回の ADK と同じ）。`pyproject.toml` や `uv.lock` は変わりません。初回は Streamlit の取得に 1〜2 分かかるので、宿題の解説の間に起動しておきましょう。
 
+ローカルでDockerを使う場合は、代わりに `docker compose up --build annotate` を実行し、ブラウザーで http://localhost:8501 を開きます。終了するときは `Ctrl+C` を押してください。
+
 1. 右下に出る「ブラウザーで開く」を押します（出ない場合は、下の「ポート」タブから 8501 を開きます）
 2. 左に質問・回答・参照（用語集のエントリと、期待するふるまい）、右に 5 つの基準のラジオボタンと「迷った」のチェックがあります
 3. 1 件ごとに「保存して次へ」を押します。10 件終わると `lectures/04/labels.jsonl` に保存されます。目安は 1 件 40 秒です
@@ -87,6 +89,12 @@ uv run python -m app.judge --compare lectures/04/reference/labels_instructor.jso
 
 ```bash
 uv run python -m app.judge
+```
+
+ローカルでDockerを使う場合は、代わりに次のコマンドを実行します。結果は同じ `lectures/04/judge_result.json` に保存されます。
+
+```bash
+docker compose run --rm annotate python -m app.judge
 ```
 
 10 件 × 1 回ずつ LLM を呼びます（1 分ほど）。採点のプロンプトは `data/eval/rubric.md` にあり、全文読めます。`app/judge.py` は、基準ごとに理由を先に書かせてから T / F / unsure を出させる構造化出力で、temperature は 0 です。
