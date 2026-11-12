@@ -1,5 +1,5 @@
 FROM ghcr.io/astral-sh/uv:0.13.4 AS uv
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 
@@ -32,3 +32,12 @@ RUN groupadd --gid 1000 learner \
 USER learner
 
 CMD ["python", "-m", "app.ask"]
+
+FROM base AS annotate
+USER root
+RUN uv pip install --python /opt/venv/bin/python streamlit==1.66.1 \
+    && rm -rf /tmp/uv-cache
+COPY tools/ ./tools/
+COPY .streamlit/ ./.streamlit/
+USER learner
+CMD ["streamlit", "run", "tools/annotate.py", "--server.address=0.0.0.0"]

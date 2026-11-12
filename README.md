@@ -112,3 +112,17 @@ docker compose run --rm aie python -m pytest -q -p no:cacheprovider
 `--chat`では会話履歴を引き継ぎ、各回答の入力・出力トークン数を表示します。`/exit`で終了し、履歴は保存しません。モデルは`.env`の`AIE_MODEL`で変更できます。環境変数が設定されていれば、`.env`より優先します。
 
 `.env`はイメージに含めず、実行時に読み取り専用で渡します。ソースの編集は次の実行に反映されます。依存関係を変更した場合は再ビルドしてください。Linuxで権限エラーが出る場合は、`.env`に`LOCAL_UID`と`LOCAL_GID`を`id -u`と`id -g`の値で指定してください（既定は1000）。
+
+第4回のラベル付け画面をDockerで使う場合は、次のコマンドを実行して http://localhost:8501 を開きます。終了するときは `Ctrl+C` を押してください。
+
+```bash
+docker compose up --build annotate
+```
+
+ラベルは `lectures/04/labels.jsonl`、作成した評価セットは `data/eval/my_cases.jsonl` に保存されます。Linux・WSLで保存時に権限エラーが出る場合は、上記の `LOCAL_UID` と `LOCAL_GID` を設定してください。
+
+ラベル付け後、LLMによる採点は次のコマンドで実行します。結果は `lectures/04/judge_result.json` に保存されます。
+
+```bash
+docker compose run --rm annotate python -m app.judge
+```
